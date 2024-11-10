@@ -42,9 +42,8 @@ class ImageDataset(Dataset):
 
 # Define transformations and load the datasets
 transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711]),
+    transforms.Resize((224, 224)),  # Resize to the expected input size for CLIP
+    transforms.ToTensor()           # Convert to tensor with values in the [0, 1] range
 ])
 
 # Load datasets with synthetic label as 0 for real, 1 for AI-generated
@@ -72,7 +71,7 @@ class_labels = []
 with torch.no_grad():
     for images, class_label, synthetic_label in data_loader:
         # Use the processor to prepare the images
-        inputs = processor(images=images, return_tensors="pt")
+        inputs = processor(images=images, return_tensors="pt", do_rescale=False)
         
         # Pass the images through the model and get image embeddings
         outputs = model.get_image_features(**inputs).squeeze()
