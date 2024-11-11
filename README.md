@@ -10,7 +10,7 @@ data/
 ├── cifar-100-python/
 ├── stanford-cars-real-train-fewshot/
 └── stanford-cars-synthetic-classwise-16/
-
+```
 
 
 - **`cifar-100-python/`**: This directory contains the CIFAR-100 dataset, structured as per the Python version distribution format. Ensure the data files are compatible with the project requirements.
