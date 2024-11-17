@@ -1,3 +1,4 @@
 data/*
 data/
 cifar100_pretrained_resnet18.pth
+dybtProjekt.code-workspace
