@@ -4,3 +4,9 @@ cifar100_pretrained_resnet18.pth
 dybtProjekt.code-workspace
 dybtProjekt
 __pycache__
+/gradcam_outputs
+models/resnet18_finetuned.pth
+models/resnet18_finetuned_images.pth
+models/resnet18_finetuned_images_fc_only.pth
+models/resnet18_finetuned_models.pth
+/models
