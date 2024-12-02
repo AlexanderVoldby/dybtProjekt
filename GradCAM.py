@@ -3,7 +3,7 @@ import copy
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
+from torchvision import transforms, models
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,6 +11,46 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix, classification_report
 from tqdm import tqdm
 import random
+import warnings
+warnings.filterwarnings("ignore")
+
+# ===========================
+# 0. Configuration
+# ===========================
+# Choose between 'cnn' and 'resnet'
+MODEL_ARCHITECTURE = 'resnet'
+
+# Paths to the dataset directories
+data_dir = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/stanford_cars/split_random/'
+
+# Path to the saved model
+if MODEL_ARCHITECTURE == 'cnn':
+    model_path = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/models/simple_cnn_models.pth'
+    gradcam_base_dir = 'gradcam_outputs/cnn_models_heatmaps'
+
+elif MODEL_ARCHITECTURE == 'resnet':
+    model_path = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/models/resnet18_finetuned_random.pth'
+    gradcam_base_dir = 'gradcam_outputs/resnet_random_heatmaps'
+
+
+
+
+real_test_dir = os.path.join(data_dir, 'real', 'test')
+synthetic_test_dir = os.path.join(data_dir, 'synthetic', 'test')
+
+gradcam_real_dir = os.path.join(gradcam_base_dir, 'real')
+gradcam_synthetic_dir = os.path.join(gradcam_base_dir, 'synthetic')
+
+# Verify that all directories and model exist
+for dir_path in [real_test_dir, synthetic_test_dir]:
+    if not os.path.isdir(dir_path):
+        raise ValueError(f"Directory does not exist: {dir_path}")
+
+if not os.path.isfile(model_path):
+    raise ValueError(f"Model file does not exist: {model_path}")
+
+
+
 
 # ===========================
 # 1. Set Random Seeds for Reproducibility
@@ -286,24 +326,6 @@ def overlay_heatmap(img, heatmap, alpha=0.4, cmap='jet'):
 # 6. Main Function
 # ===========================
 def main():
-    # ===========================
-    # 6.1 Configuration and Paths
-    # ===========================
-    # Paths to the dataset directories
-    data_dir = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/stanford_cars/split_models/'
-    real_test_dir = os.path.join(data_dir, 'real', 'test')
-    synthetic_test_dir = os.path.join(data_dir, 'synthetic', 'test')
-
-    # Path to the saved model
-    model_path = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/models/simple_cnn_models.pth'  # Update this path if necessary
-
-    # Verify that all directories and model exist
-    for dir_path in [real_test_dir, synthetic_test_dir]:
-        if not os.path.isdir(dir_path):
-            raise ValueError(f"Directory does not exist: {dir_path}")
-
-    if not os.path.isfile(model_path):
-        raise ValueError(f"Model file does not exist: {model_path}")
 
     # ===========================
     # 6.2 Define Data Transforms
@@ -324,8 +346,8 @@ def main():
     # 6.3 Load Test Dataset
     # ===========================
     print("Loading test datasets...")
-    test_dataset = ImageDataset(real_dir=real_test_dir, 
-                                synthetic_dir=synthetic_test_dir, 
+    test_dataset = ImageDataset(real_dir=real_test_dir,
+                                synthetic_dir=synthetic_test_dir,
                                 transform=test_transforms)
 
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=4)
@@ -334,28 +356,50 @@ def main():
     # 6.4 Initialize the Model
     # ===========================
     print("Initializing the model...")
-    device = torch.device("mps" if torch.backends.mps.is_available() else 
+    device = torch.device("mps" if torch.backends.mps.is_available() else
                           "cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    model = SimpleCNN(num_classes=2)
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    if MODEL_ARCHITECTURE == 'cnn':
+        model = SimpleCNN(num_classes=2)
+        model.load_state_dict(torch.load(model_path, map_location=device))
+    elif MODEL_ARCHITECTURE == 'resnet':
+        # Initialize resnet18 model
+        model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+
+        # Modify the final fully connected layer
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, 2)  # Assuming 2 classes: 'real' and 'synthetic'
+
+        # Load the fine-tuned weights
+        model.load_state_dict(torch.load(model_path, map_location=device))
+    else:
+        raise ValueError(f"Unknown MODEL_ARCHITECTURE: {MODEL_ARCHITECTURE}")
+
     model.to(device)
     model.eval()
 
     # ===========================
     # 6.5 Initialize Grad-CAM
     # ===========================
-    # Identify the target layer (last convolutional layer)
-    # In SimpleCNN, the last Conv2d layer is features[8]
-    target_layer = model.features[8]
+    if MODEL_ARCHITECTURE == 'cnn':
+        # Identify the target layer (last convolutional layer)
+        # In SimpleCNN, the last Conv2d layer is features[8]
+        target_layer = model.features[8]
+    elif MODEL_ARCHITECTURE == 'resnet':
+        # Identify the target layer (last convolutional layer in resnet18)
+        # In resnet18, the last conv layer is layer4[1].conv2
+        target_layer = model.layer4[1].conv2
+    else:
+        raise ValueError(f"Unknown MODEL_ARCHITECTURE: {MODEL_ARCHITECTURE}")
+
     grad_cam = GradCAM(model, target_layer)
 
     # ===========================
     # 6.6 Select Images for Visualization
     # ===========================
     # Define the number of samples to visualize from each class
-    num_samples_per_class = 1e100  # Adjust as needed
+    num_samples_per_class = int(1e100)  # Adjust as needed
 
     # Collect image indices for 'real' and 'synthetic'
     real_indices = [i for i, label in enumerate(test_dataset.labels) if label == 0]
@@ -378,16 +422,11 @@ def main():
     # ===========================
     print("Applying Grad-CAM and generating visualizations...")
 
-    # Define output directories for real and synthetic
-    gradcam_base_dir = 'gradcam_outputs'
-    gradcam_real_dir = os.path.join(gradcam_base_dir, 'real_cnn_models')
-    gradcam_synthetic_dir = os.path.join(gradcam_base_dir, 'synthetic_cnn_models')
-
     # Create the base and subdirectories if they don't exist
     os.makedirs(gradcam_real_dir, exist_ok=True)
     os.makedirs(gradcam_synthetic_dir, exist_ok=True)
 
-    for idx in selected_indices:
+    for idx in tqdm(selected_indices, desc="Generating Grad-CAM visualizations"):
         img_tensor, label = test_dataset[idx]
         if label == -1:
             print(f"Skipping image at index {idx} due to loading error.")
@@ -417,7 +456,8 @@ def main():
 
         # Plot and save the image
         plt.figure(figsize=(8, 8))
-        plt.imshow(overlayed_img)
+        # plt.imshow(overlayed_img)
+        plt.imshow(heatmap)
         plt.title(title)
         plt.axis('off')
         plt.tight_layout()
@@ -437,7 +477,7 @@ def main():
         plt.savefig(save_path, dpi=300)
         plt.close()
 
-        print(f"Grad-CAM visualization saved to {save_path}")
+        # print(f"Grad-CAM visualization saved to {save_path}")
 
     # ===========================
     # 6.8 Cleanup

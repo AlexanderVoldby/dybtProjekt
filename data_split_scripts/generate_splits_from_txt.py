@@ -8,13 +8,12 @@ from pathlib import Path
 # for hver gang, så navngiv output-mappen til hhv. "split_random" og "split_models"
 
 
-SPLIT_INFO_FILE = "split_info_random.txt" # Kør en gang med "split__info_random.txt" og en gang med "split_info_models.txt"
-OUTPUT_DIR = "/path/to/dybtProjekt/data/stanford_cars/split_random"  # lav "split_random"-mappe eller "split_models"-mappe svarende til hvilken split_info-fil der bruges
-ORIGINAL_REAL_DIR = "/path/to/stanford-cars-real-train-fewshot"  
-ORIGINAL_SYNTHETIC_DIR = "/path/to/stanford-cars-synthetic-classwise-16"  
+SPLIT_INFO_FILE = "/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data_split_scripts/split_info_random.txt" # Kør en gang med "split__info_random.txt" og en gang med "split_info_models.txt"
+OUTPUT_DIR = "/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/no-background/split_random"  # lav "split_random"-mappe eller "split_models"-mappe svarende til hvilken split_info-fil der bruges
+ORIGINAL_REAL_DIR = "/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/no-background/no-background-stanford-cars-real-train-fewshot"  
+ORIGINAL_SYNTHETIC_DIR = "/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/no-background/no-background-stanford-cars-synthetic-classwise-16"  
 
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff'}
-
 def load_split_info(split_info_file):
     with open(split_info_file, 'r') as f:
         split_info = json.load(f)
@@ -22,17 +21,53 @@ def load_split_info(split_info_file):
     return split_info
 
 def copy_image(original_category_dir, class_name, image_name, destination_dir):
+    """
+    Copies an image from the original category directory to the destination directory.
+    If the image with a .jpg extension does not exist, it attempts to copy the .png version.
+
+    Parameters:
+    - original_category_dir (str or Path): Path to the original category directory.
+    - class_name (str): Name of the class/category.
+    - image_name (str): Name of the image file.
+    - destination_dir (str or Path): Path to the destination directory.
+    """
+    # Ensure original_category_dir and destination_dir are Path objects
+    original_category_dir = Path(original_category_dir)
+    destination_dir = Path(destination_dir)
+
+    # If 'background' is in ORIGINAL_REAL_DIR, remove spaces from class_name
+    # Ensure ORIGINAL_REAL_DIR is defined in your script's scope
+    if 'background' in getattr(__import__(__name__), 'ORIGINAL_REAL_DIR', ''):
+        class_name = class_name.replace(" ", "")
+
+    # Construct the initial source image path (assuming .jpg extension)
     source_image_path = original_category_dir / class_name / image_name
+
+    # Check if the source image exists
+    if not source_image_path.exists():
+        # Change the suffix from .jpg to .png
+        source_image_path = source_image_path.with_suffix('.png')
+
+    # Check again if the new source image exists
     if not source_image_path.exists():
         print(f"Error: Source image '{source_image_path}' does not exist.")
         return
 
-    new_filename = f"{class_name}_{image_name}"
+    # Create a new filename by prefixing the class name
+    new_filename = f"{class_name}_{source_image_path.name}"
+
+    # Define the destination image path
     destination_image_path = destination_dir / new_filename
 
     try:
+        # Ensure the destination directory exists
+        destination_image_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Copy the image to the destination path
         shutil.copy2(source_image_path, destination_image_path)
-        print(f"Copied '{source_image_path}' to '{destination_image_path}'.")
+
+        # Optional: Print success message
+        # print(f"Copied '{source_image_path}' to '{destination_image_path}'.")
     except Exception as e:
         print(f"Error copying '{source_image_path}' to '{destination_image_path}': {e}")
 
