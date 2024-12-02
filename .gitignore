@@ -10,3 +10,5 @@ models/resnet18_finetuned_images.pth
 models/resnet18_finetuned_images_fc_only.pth
 models/resnet18_finetuned_models.pth
 /models
+plots/*
+plots/
