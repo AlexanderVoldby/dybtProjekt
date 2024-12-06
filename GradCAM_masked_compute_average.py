@@ -6,11 +6,32 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import random
 
+
+# Toggle between weighted and binary Grad-CAM activations
+USE_WEIGHTED_GRADCAM = True  # Set to True for weighted, False for binary
+
+model = 'resnet' # 'cnn' or 'resnet'
+data_split = 'models' # 'random' or 'models'
+type = 'real' # 'real' or 'synthetic'
+
+
+# Directory containing background-removed images
+image_dir = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/no-background/split_{data_split}/{type}/test'  # Update this path
+
+# Directory containing Grad-CAM heatmaps
+if model == 'cnn':
+    heatmap_dir = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/gradcam_outputs/simplecnn_{data_split}/{type}_heatmaps'  # Update this path
+elif model == 'resnet':
+    heatmap_dir = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/gradcam_outputs/resnet_{data_split}/{type}_heatmaps'
+
+
+
 def compute_gradcam_outside_proportion(
     img_path, 
     heatmap_path, 
-    use_otsu=True,  # Parameter to toggle Otsu's thresholding
-    threshold_value=None  # Optional fixed threshold value
+    use_weighted=False,  # New parameter to toggle weighted vs binary
+    use_otsu=True,       # Parameter to toggle Otsu's thresholding (used only if use_weighted=False)
+    threshold_value=None  # Optional fixed threshold value (used only if use_weighted=False and use_otsu=False)
 ):
     """
     Computes the proportion of the Grad-CAM area that lies outside the main object in the image.
@@ -18,12 +39,17 @@ def compute_gradcam_outside_proportion(
     Parameters:
         img_path (str): Path to the background-removed image (PNG with transparency).
         heatmap_path (str): Path to the saved Grad-CAM heatmap (grayscale image).
+        use_weighted (bool): Whether to use weighted Grad-CAM activations instead of binary.
         use_otsu (bool): Whether to use Otsu's method for thresholding. Defaults to True.
+                          Ignored if use_weighted is True.
         threshold_value (float, optional): Fixed threshold to binarize the Grad-CAM heatmap.
-                                           Ignored if use_otsu is True.
+                                           Ignored if use_weighted is True or use_otsu is True.
 
     Returns:
         proportion (float): Proportion of Grad-CAM area outside the main object.
+                            Computed as either:
+                            - (Sum of activations outside) / (Sum of all activations) if use_weighted=True
+                            - (Number of pixels above threshold outside) / (Number of pixels above threshold) if use_weighted=False
     """
     # ===========================
     # Step 1: Load the Background-Removed Image
@@ -60,38 +86,42 @@ def compute_gradcam_outside_proportion(
         heatmap_np = np.array(heatmap) / 255.0  # Normalize after resizing
 
     # ===========================
-    # Step 4: Determine the Threshold
+    # Step 4: Compute Proportion Based on Toggle
     # ===========================
-    if use_otsu:
-        try:
-            threshold = threshold_otsu(heatmap_np)
-            # Handle case where all values are the same
-            if np.isnan(threshold):
-                print(f"Otsu's threshold returned NaN for heatmap {heatmap_path}. Using threshold=0.5")
-                threshold = 0.5
-        except Exception as e:
-            print(f"Error computing Otsu's threshold for heatmap {heatmap_path}: {e}")
-            threshold = 0.5  # Default threshold
-    elif threshold_value is not None:
-        threshold = threshold_value
+    if use_weighted:
+        total_gradcam_area = np.sum(heatmap_np)
+        if total_gradcam_area == 0:
+            proportion = 0.0
+        else:
+            outside_area = np.sum(heatmap_np * (main_object_mask == 0))
+            proportion = outside_area / total_gradcam_area
     else:
-        raise ValueError("Either use_otsu must be True or a threshold_value must be provided.")
+        # Determine the Threshold
+        if use_otsu:
+            try:
+                threshold = threshold_otsu(heatmap_np)
+                # Handle case where all values are the same
+                if np.isnan(threshold):
+                    print(f"Otsu's threshold returned NaN for heatmap {heatmap_path}. Using threshold=0.5")
+                    threshold = 0.5
+            except Exception as e:
+                print(f"Error computing Otsu's threshold for heatmap {heatmap_path}: {e}")
+                threshold = 0.5  # Default threshold
+        elif threshold_value is not None:
+            threshold = threshold_value
+        else:
+            raise ValueError("Either use_otsu must be True or a threshold_value must be provided when use_weighted=False.")
 
-    # ===========================
-    # Step 5: Create the Grad-CAM Mask by Thresholding
-    # ===========================
-    gradcam_mask = (heatmap_np >= threshold).astype(np.uint8)
+        # Create the Grad-CAM Mask by Thresholding
+        gradcam_mask = (heatmap_np >= threshold).astype(np.uint8)
 
-    # ===========================
-    # Step 6: Compute Areas and Proportion
-    # ===========================
-    total_gradcam_area = np.sum(gradcam_mask)
-    outside_area = np.sum((gradcam_mask == 1) & (main_object_mask == 0))
-
-    if total_gradcam_area == 0:
-        proportion = 0.0
-    else:
-        proportion = outside_area / total_gradcam_area
+        # Compute Areas and Proportion
+        total_gradcam_area = np.sum(gradcam_mask)
+        if total_gradcam_area == 0:
+            proportion = 0.0
+        else:
+            outside_area = np.sum((gradcam_mask == 1) & (main_object_mask == 0))
+            proportion = outside_area / total_gradcam_area
 
     return proportion
 
@@ -139,20 +169,14 @@ def main():
     # ===========================
     # Configuration
     # ===========================
-    # Directory containing background-removed images
-    image_dir = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/no-background/split_random/real/test'  # Update this path
-
-    # Directory containing Grad-CAM heatmaps
-    heatmap_dir = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/gradcam_outputs/cnn_random/real_heatmaps'  # Update this path
-
     # Heatmap filename prefix (if any)
     heatmap_prefix = 'gradcam_'  # Update if different
 
-    # Whether to use Otsu's thresholding
+    # Whether to use Otsu's thresholding (only relevant if USE_WEIGHTED_GRADCAM=False)
     use_otsu = True
 
-    # Fixed threshold value (if not using Otsu)
-    fixed_threshold = None  # Set to a float value if use_otsu is False
+    # Fixed threshold value (if not using Otsu and USE_WEIGHTED_GRADCAM=False)
+    fixed_threshold = None  # Set to a float value if use_otsu is False and USE_WEIGHTED_GRADCAM=False
 
     # Number of samples to plot
     num_samples_to_plot = 5
@@ -181,6 +205,7 @@ def main():
         proportion = compute_gradcam_outside_proportion(
             img_path=img_path,
             heatmap_path=heatmap_path,
+            use_weighted=USE_WEIGHTED_GRADCAM,
             use_otsu=use_otsu,
             threshold_value=fixed_threshold
         )
@@ -201,6 +226,8 @@ def main():
         print(f"Processed {len(proportions)} image-heatmap pairs.")
         if missing_heatmaps:
             print(f"Skipped {len(missing_heatmaps)} images due to missing heatmaps.")
+        mode = "Weighted" if USE_WEIGHTED_GRADCAM else "Binary"
+        print(f"Mode: {mode} Grad-CAM Activations")
         print(f"Average Proportion of Grad-CAM area outside the main object: {average_proportion:.4f}")
         print("==============================")
     else:
