@@ -99,7 +99,7 @@ def main():
     # 3. Configuration and Hyperparameters
     # ===========================
     # Paths to the dataset directories
-    data_dir = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/stanford_cars/split_random/'  # Update this path
+    data_dir = "data/stanford-cars/split_random/"  # Update this path
     real_test_dir = os.path.join(data_dir, 'real', 'test')
     synthetic_test_dir = os.path.join(data_dir, 'synthetic', 'test')
 
@@ -158,7 +158,7 @@ def main():
     model.fc = nn.Linear(num_ftrs, num_classes)
 
     # Load the saved model weights
-    model_path = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/models/resnet18_finetuned_images.pth'  # Update this path
+    model_path = 'models/resnet18_finetuned.pth'  # Update this path
     if not os.path.isfile(model_path):
         raise FileNotFoundError(f"Saved model not found at {model_path}")
 

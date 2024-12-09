@@ -109,7 +109,7 @@ def main():
     # 4.1 Configuration and Hyperparameters
     # ===========================
     # Paths to the dataset directories
-    data_dir = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/stanford_cars/split_models/'
+    data_dir = "data/stanford-cars/split_random/"
     real_train_dir = os.path.join(data_dir, 'real', 'train')
     synthetic_train_dir = os.path.join(data_dir, 'synthetic', 'train')
     real_val_dir = os.path.join(data_dir, 'real', 'val')
@@ -335,7 +335,7 @@ def main():
     # ===========================
     # 4.9 Save the Best Model
     # ===========================
-    save_dir = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/models/'  # Update this path if necessary
+    save_dir = 'models/'  # Update this path if necessary
     os.makedirs(save_dir, exist_ok=True)
     model_save_path = os.path.join(save_dir, 'resnet18_finetuned.pth')
     torch.save(model.state_dict(), model_save_path)
