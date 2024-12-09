@@ -8,10 +8,10 @@ from pathlib import Path
 # for hver gang, så navngiv output-mappen til hhv. "split_random" og "split_models"
 
 
-SPLIT_INFO_FILE = "data_split_scripts/split_info_random.txt" # Kør en gang med "split__info_random.txt" og en gang med "split_info_models.txt"
-OUTPUT_DIR = "data/stanford-cars/split_random"  # lav "split_random"-mappe eller "split_models"-mappe svarende til hvilken split_info-fil der bruges
-ORIGINAL_REAL_DIR = "data/stanford-cars-real-train-fewshot"  
-ORIGINAL_SYNTHETIC_DIR = "data/stanford-cars-synthetic-classwise-16"  
+SPLIT_INFO_FILE = "/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data_split_scripts/split_info_models.txt" # Kør en gang med "split__info_random.txt" og en gang med "split_info_models.txt"
+OUTPUT_DIR = "/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/no-background/split_models"  # lav "split_random"-mappe eller "split_models"-mappe svarende til hvilken split_info-fil der bruges
+ORIGINAL_REAL_DIR = "/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/no-background/no-background-stanford-cars-real-train-fewshot"  
+ORIGINAL_SYNTHETIC_DIR = "/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/no-background/no-background-stanford-cars-synthetic-classwise"  
 
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff'}
 def load_split_info(split_info_file):
