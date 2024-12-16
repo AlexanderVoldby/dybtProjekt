@@ -9,8 +9,10 @@ from skimage.filters import threshold_otsu  # Import Otsu's thresholding method
 USE_WEIGHTED_GRADCAM = True  # Set to True for weighted, False for binary
 
 # Paths to the image and its corresponding Grad-CAM heatmap
-img_nobackground_path = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/no-background/split_random/synthetic/test/AcuraIntegraTypeR2001_14.png'
-gradcam_heatmap_path = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/gradcam_outputs/simplecnn_random/synthetic_heatmaps/gradcam_Acura Integra Type R 2001_14.png'
+# img_nobackground_path = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/no-background/split_random/synthetic/test/AcuraIntegraTypeR2001_14.png'
+img_nobackground_path = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/sd2.1/no-background-314/1_148.png'
+# gradcam_heatmap_path = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/gradcam_outputs/resnetboth_random_heatmaps/synthetic_heatmaps/gradcam_Acura Integra Type R 2001_14.png'
+gradcam_heatmap_path = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/gradcam_outputs/resnetboth_heatmaps_sd/gradcam_1_148.png'
 
 
 def compute_gradcam_outside_proportion_with_visualization(

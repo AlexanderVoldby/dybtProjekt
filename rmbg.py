@@ -8,7 +8,12 @@ from transformers import AutoModelForImageSegmentation
 model_name = "briaai/RMBG-2.0"
 model = AutoModelForImageSegmentation.from_pretrained(model_name, trust_remote_code=True)
 torch.set_float32_matmul_precision('high')  # Set matrix multiplication precision
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+# elif torch.backends.mps.is_available():
+#     device = torch.device("mps")
+else:
+    device = torch.device("cpu")
 model.to(device)
 model.eval()
 
@@ -26,28 +31,29 @@ transform_image = transforms.Compose([
 #output_parent_folder = 'data/no-background-stanford-cars-real-train-fewshot'
 
 # Comment in for synthetic / comment out for real
-input_parent_folder = 'data/stanford-cars-synthetic-classwise-16'
-output_parent_folder = 'data/no-background-stanford-cars-synthetic-classwise-16'
+input_parent_folder = '/Users/fredmac/Documents/DTU-FredMac/sd2.1/314'
+output_parent_folder = 'data/no-background-sd-cars'
 
 os.makedirs(output_parent_folder, exist_ok=True)
 
 # Specify which folders to process (e.g., the first 3 folders)
 # Set to None to process all folders
-PROCESS_ALL_FOLDERS = False
+PROCESS_ALL_FOLDERS = True
 
 start_folder_index = 0
 end_folder_index = -1
 
 # Get all subfolders in the input parent folder
-all_folders = sorted(os.listdir(output_parent_folder))
+all_folders = sorted(os.listdir(input_parent_folder))
 
 
 # Limit the folders to process if specified
 if not PROCESS_ALL_FOLDERS:
     all_folders = all_folders[-1]
 
+print(all_folders)
 # Iterate through selected subfolders
-for folder in ["smart fortwo Convertible 2012"]:#all_folders:
+for folder in all_folders:#all_folders:
     input_folder_path = os.path.join(input_parent_folder, folder)
 
     # Check if the path is a folder
