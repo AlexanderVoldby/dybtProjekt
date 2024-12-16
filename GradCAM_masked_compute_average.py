@@ -11,18 +11,20 @@ import random
 USE_WEIGHTED_GRADCAM = True  # Set to True for weighted, False for binary
 
 model = 'resnet' # 'cnn' or 'resnet'
-data_split = 'models' # 'random' or 'models'
-type = 'real' # 'real' or 'synthetic'
+data_split = 'random' # 'random' or 'models'
+type = 'synthetic' # 'real' or 'synthetic'
 
 
 # Directory containing background-removed images
-image_dir = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/no-background/split_{data_split}/{type}/test'  # Update this path
+# image_dir = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/no-background/split_{data_split}/{type}/test'  # Update this path
+image_dir = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/sd2.1/no-background-314'
 
 # Directory containing Grad-CAM heatmaps
 if model == 'cnn':
     heatmap_dir = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/gradcam_outputs/simplecnn_{data_split}/{type}_heatmaps'  # Update this path
 elif model == 'resnet':
-    heatmap_dir = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/gradcam_outputs/resnet_{data_split}/{type}_heatmaps'
+    # heatmap_dir = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/gradcam_outputs/resnet_{data_split}/{type}_heatmaps'
+    heatmap_dir = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/gradcam_outputs/resnetboth_heatmaps_sd'
 
 
 

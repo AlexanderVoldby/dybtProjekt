@@ -20,7 +20,8 @@ MODEL_ARCHITECTURE = 'resnet' # Choose between 'cnn' and 'resnet'
 datasplit = 'random' # Choose between 'random' and 'models'
 
 # Paths to the dataset directories
-data_dir = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/stanford_cars/split_{datasplit}/'
+# data_dir = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/stanford_cars/split_{datasplit}/'
+data_dir = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/sd2.1/314'
 
 # Path to the saved model
 if MODEL_ARCHITECTURE == 'cnn':
@@ -28,8 +29,8 @@ if MODEL_ARCHITECTURE == 'cnn':
     gradcam_base_dir = f'gradcam_outputs/cnn_{datasplit}_heatmaps'
 
 elif MODEL_ARCHITECTURE == 'resnet':
-    model_path = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/models/resnet18_finetuned_{datasplit}.pth'
-    gradcam_base_dir = f'gradcam_outputs/resnet_{datasplit}_heatmaps'
+    model_path = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/models/resnet_both_dd_sd.pth'
+    gradcam_base_dir = f'gradcam_outputs/resnetboth_{datasplit}_heatmaps_sd'
 
 
 
