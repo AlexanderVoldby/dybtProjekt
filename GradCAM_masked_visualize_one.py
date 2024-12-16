@@ -15,6 +15,9 @@ img_nobackground_path = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/d
 gradcam_heatmap_path = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/gradcam_outputs/resnetboth_heatmaps_sd/gradcam_1_148.png'
 
 
+
+
+
 def compute_gradcam_outside_proportion_with_visualization(
     img_path, 
     heatmap_path, 

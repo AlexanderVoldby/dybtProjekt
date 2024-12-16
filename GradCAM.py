@@ -12,55 +12,7 @@ import random
 import warnings
 warnings.filterwarnings("ignore")
 
-# ===========================
-# 0. Configuration
-# ===========================
 
-MODEL_ARCHITECTURE = 'resnet' # Choose between 'cnn' and 'resnet'
-datasplit = 'random' # Choose between 'random' and 'models'
-
-# Paths to the dataset directories
-# data_dir = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/stanford_cars/split_{datasplit}/'
-data_dir = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/sd2.1/314'
-
-# Path to the saved model
-if MODEL_ARCHITECTURE == 'cnn':
-    model_path = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/models/simple_cnn_{datasplit}.pth'
-    gradcam_base_dir = f'gradcam_outputs/cnn_{datasplit}_heatmaps'
-
-elif MODEL_ARCHITECTURE == 'resnet':
-    model_path = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/models/resnet_both_dd_sd.pth'
-    gradcam_base_dir = f'gradcam_outputs/resnetboth_{datasplit}_heatmaps_sd'
-
-
-
-
-
-real_test_dir = os.path.join(data_dir, 'real', 'test')
-synthetic_test_dir = os.path.join(data_dir, 'synthetic', 'test')
-
-gradcam_real_dir = os.path.join(gradcam_base_dir, 'real_heatmaps')
-gradcam_synthetic_dir = os.path.join(gradcam_base_dir, 'synthetic_heatmaps')
-
-# Verify that all directories and model exist
-for dir_path in [real_test_dir, synthetic_test_dir]:
-    if not os.path.isdir(dir_path):
-        raise ValueError(f"Directory does not exist: {dir_path}")
-
-if not os.path.isfile(model_path):
-    raise ValueError(f"Model file does not exist: {model_path}")
-
-# ===========================
-# 1. Set Random Seeds for Reproducibility
-# ===========================
-def set_seed(seed=42):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    torch.backends.cudnn.deterministic = True
-
-set_seed(42)
 
 # ===========================
 # 2. Define Custom Dataset Class
@@ -292,7 +244,55 @@ def unnormalize(img_tensor, mean, std):
 # 6. Main Function
 # ===========================
 def main():
+    # ===========================
+    # 0. Configuration
+    # ===========================
 
+    MODEL_ARCHITECTURE = 'resnet' # Choose between 'cnn' and 'resnet'
+    datasplit = 'random' # Choose between 'random' and 'models'
+
+    # Paths to the dataset directories
+    # data_dir = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/stanford_cars/split_{datasplit}/'
+    data_dir = '/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/data/sd2.1/314'
+
+    # Path to the saved model
+    if MODEL_ARCHITECTURE == 'cnn':
+        model_path = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/models/simple_cnn_{datasplit}.pth'
+        gradcam_base_dir = f'gradcam_outputs/cnn_{datasplit}_heatmaps'
+
+    elif MODEL_ARCHITECTURE == 'resnet':
+        model_path = f'/Users/fredmac/Documents/DTU-FredMac/Deep/dybtProjekt/models/resnet_both_dd_sd.pth'
+        gradcam_base_dir = f'gradcam_outputs/resnetboth_{datasplit}_heatmaps_sd'
+
+
+
+
+
+    real_test_dir = os.path.join(data_dir, 'real', 'test')
+    synthetic_test_dir = os.path.join(data_dir, 'synthetic', 'test')
+
+    gradcam_real_dir = os.path.join(gradcam_base_dir, 'real_heatmaps')
+    gradcam_synthetic_dir = os.path.join(gradcam_base_dir, 'synthetic_heatmaps')
+
+    # Verify that all directories and model exist
+    for dir_path in [real_test_dir, synthetic_test_dir]:
+        if not os.path.isdir(dir_path):
+            raise ValueError(f"Directory does not exist: {dir_path}")
+
+    if not os.path.isfile(model_path):
+        raise ValueError(f"Model file does not exist: {model_path}")
+
+    # ===========================
+    # 1. Set Random Seeds for Reproducibility
+    # ===========================
+    def set_seed(seed=42):
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        np.random.seed(seed)
+        random.seed(seed)
+        torch.backends.cudnn.deterministic = True
+
+    set_seed(42)
     # ===========================
     # 6.2 Define Data Transforms
     # ===========================
